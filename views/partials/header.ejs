@@ -1,0 +1,14 @@
+<header>
+    <h1 class="fs-1">The Secret Word EJS Application</h1>
+</header>
+<% if (errors && errors.length) {
+  errors.forEach((err) => { %>
+    <div class="alert alert-danger">Error: <%= err %></div>
+<% }) } %>
+<% if (info && info.length) {
+  info.forEach((msg) => { %>
+    <div class="alert alert-success">Info: <%= msg %></div>
+<% }) } %>
+<% if ((errors && errors.length) || (info && info.length)) { %>
+    <hr />
+<% } %>

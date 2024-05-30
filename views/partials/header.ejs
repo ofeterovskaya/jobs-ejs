@@ -1,10 +1,14 @@
-<h1>The Jobs EJS Application</h1>
-<% if (errors) {
+<header>
+    <h1 class="fs-1">The Secret Word EJS Application</h1>
+</header>
+<% if (errors && errors.length) {
   errors.forEach((err) => { %>
-    <div>Error: <%= err %></div>
+    <div class="alert alert-danger">Error: <%= err %></div>
 <% }) } %>
-<% if (info) {
+<% if (info && info.length) {
   info.forEach((msg) => { %>
-    <div>Info: <%= msg %></div>
+    <div class="alert alert-success">Info: <%= msg %></div>
 <% }) } %>
-<hr />
+<% if ((errors && errors.length) || (info && info.length)) { %>
+    <hr />
+<% } %>

@@ -15,11 +15,9 @@ const passportInit = () => {
           }
 
           const result = await user.comparePassword(password);
-          if (result) {
-            return done(null, user);
-          } else {
-            return done(null, false, { message: "Incorrect credentials." });
-          }
+          return result 
+              ? done(null, user)
+              : done(null, false, { message: "Incorrect credentials." });
         } catch (e) {
           return done(e);
         }
@@ -27,21 +25,20 @@ const passportInit = () => {
     )
   );
 
-  passport.serializeUser(async function (user, done) {
+  passport.serializeUser(function (user, done) {
     done(null, user.id);
   });
 
   passport.deserializeUser(async function (id, done) {
     try {
       const user = await User.findById(id);
-      if (!user) {
-        return done(new Error("user not found"));
-      }
-      return done(null, user);
+      return user 
+          ? done(null, user)
+          : done(new Error("user not found"));
     } catch (e) {
       done(e);
     }
-  });
+});
 };
 
 module.exports = passportInit;

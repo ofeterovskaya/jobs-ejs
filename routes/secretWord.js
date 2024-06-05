@@ -2,15 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  if (!req.session.secretWord) {
-    req.session.secretWord = "syzygy";
-  }
-
+  req.session.secretWord ||= "syzygy";
   res.render("secretWord", { secretWord: req.session.secretWord });
 });
 
 router.post("/", (req, res) => {
-  if (req.body.secretWord.toUpperCase()[0] == "P") {
+  if (req.body.secretWord?.toLowerCase().startsWith("p")) {
     req.flash("error", "That word won't work!");
     req.flash("error", "You can't use words that start with p.");
   } else {

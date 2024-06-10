@@ -1,12 +1,10 @@
 require("dotenv").config(); // to load the .env file into the process.env object
+require("express-async-errors");// Import the express-async-errors module to handle async errors
+
+
 // Initialize an express application
 const express = require('express');
-
 const session = require("express-session");
-
-// Import the express-async-errors module to handle async errors
-require("express-async-errors");
-
 const passport = require("passport");
 const passportInit = require("./passport/passportInit");
 const auth = require("./middleware/auth");

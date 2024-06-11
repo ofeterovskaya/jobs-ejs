@@ -1,8 +1,10 @@
 const User = require("../models/User");
 const parseVErr = require("../utils/parseValidationErrs");
+const csrf = require('csurf');
+const csrfProtection = csrf();
 
 const registerShow = (req, res) => {
-  res.render("register");
+  res.render("register", { csrfToken: req.csrfToken() });
 };
 
 const registerDo = async (req, res) => {
@@ -21,7 +23,8 @@ const registerDo = async (req, res) => {
     } else {
       req.flash("error", e.message);
     }
-    res.render("register", { errors: req.flash("error") });
+    //res.render("register", { errors: req.flash("error") });
+    res.render("register", { errors: req.flash("error"), csrfToken: req.csrfToken() });
   }
 };
 

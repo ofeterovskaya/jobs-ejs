@@ -3,6 +3,7 @@
 <% if (user) { %>
   <p style="color: green; text-align: center; margin-top: 5%;">User <%= user.name %> is logged on.</p>
    <form method="POST" action="/sessions/logoff" style="position: absolute; top: 0; right: 0;">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
    <button 
     type="submit"
     style="background-color: darkgreen; color: white;">
@@ -23,18 +24,3 @@
 <% if ((errors && errors.length) || (info && info.length)) { %>
     <hr />
 <% } %>
-<!-- </div> -->
-<!-- <header>
-    <h1 class="fs-1">The Secret Word EJS Application</h1>
-</header>
-<% if (errors && errors.length) {
-  errors.forEach((err) => { %>
-    <div class="alert alert-danger">Error: <%= err %></div>
-<% }) } %>
-<% if (info && info.length) {
-  info.forEach((msg) => { %>
-    <div class="alert alert-success">Info: <%= msg %></div>
-<% }) } %>
-<% if ((errors && errors.length) || (info && info.length)) { %>
-    <hr />
-<% } %> -->

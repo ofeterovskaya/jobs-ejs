@@ -108,7 +108,21 @@ app.get('/jobs', async function(req, res) {
     }
 });
 
+app.get('/job', (req, res) => {
+    res.render('job', { job: null }); // For adding a new job
+});
 app.use("/sessions", require("./routes/sessionRoutes"));
+
+app.get('/job/edit/:id', async (req, res) => {
+    // Fetch the job with the given ID from your database
+    try {
+        const job = await Job.findById(req.params.id);
+        res.render('job', { job }); // For editing an existing job
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while fetching the job');
+    }
+});
 
 const secretWordRouter = require("./routes/secretWord");// Replace the app.get and app.post statements for the "/secretWord" routes
 

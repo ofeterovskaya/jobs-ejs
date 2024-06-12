@@ -22,6 +22,10 @@ router.get('/jobs', async function(req, res) {
     }
 });
 
+router.get('/jobs/new', function(req, res) {
+    res.render('job', { job: null });
+});
+
 router.route("/jobs")
     .post(addJobs);
 router.route("/jobs/new")

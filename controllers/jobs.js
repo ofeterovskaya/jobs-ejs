@@ -24,7 +24,7 @@ const addJobs = async (req, res, next) => {
 // GET the form for adding a new jobs
 const getNewJobs = async (req, res) => {
     try {
-        res.render('newJobs', {}); 
+        res.render('job', { job: null });
     } catch (error) {
         handleErrors(error, req, res);
     }
@@ -39,7 +39,7 @@ const editJobs = async (req, res, next) => {
             req.flash('error', 'Jobs not found');
             return;
         }
-        res.render('jobs', { jobs }); 
+        res.render('job', { job: jobs });
     } catch (error) {
         handleErrors(error, req, res); 
     }
@@ -67,7 +67,7 @@ const updateJobs = async (req, res, next) => {
 // POST to delete a job
 const deleteJobs = async (req, res, next) => {
     try {
-        const deletedjobs = await Jobs.findOneAndDelete({ _id: req.params.id, createdBy: req.user._id });
+        const deletedJobs = await Jobs.findOneAndDelete({ _id: req.params.id, createdBy: req.user._id });
         if (!deletedJobs) {
             res.status(404);
             req.flash('error', 'Job not found');

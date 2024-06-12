@@ -6,7 +6,9 @@ const parseValidationErrors = (e, req) => {
   const errorMessages = {
     "username": "Username is required.",
     "password": "Password must be at least 8 characters.",
-    // Add more custom messages as needed
+    "company": "Please provide company name.",
+    "position": "Please provide position.",
+    "createdBy": "Please provide a user.",
   };
 
   const keys = Object.keys(e.errors);

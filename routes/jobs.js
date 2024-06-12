@@ -22,19 +22,30 @@ router.get('/jobs', async function(req, res) {
     }
 });
 
-router.get('/jobs/new', function(req, res) {
-    res.render('job', { job: null });
-});
+router.route("/jobs/delete/:id")
+    .post(async function(req, res) {
+        try {
+            await Job.findByIdAndRemove(req.params.id);
+            res.redirect('/jobs');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('An error occurred while deleting the job');
+        }
+    });
+
+router.route("/jobs/new")
+    .get(getNewJobs)
+    .post(getNewJobs); 
+
+router.route("/jobs/edit/:id")
+    .get(editJobs)
+    .post(editJobs); 
+
+router.route("/jobs/update/:id")
+    .post(updateJobs); 
 
 router.route("/jobs")
+    .get(getJobs)
     .post(addJobs);
-router.route("/jobs/new")
-    .get(getNewJobs);
-router.route("/jobs/edit/:id")
-    .get(editJobs);
-router.route("/jobs/update/:id")
-    .post(updateJobs);
-router.route("/jobs/delete/:id")
-    .post(deleteJobs);
 
 module.exports = router;

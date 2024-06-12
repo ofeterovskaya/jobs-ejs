@@ -15,19 +15,3 @@
   <input type="submit" value="<%= job ? 'Update' : 'Add' %>">
 </form>
 
-<!-- <h2><%= job ? 'Edit' : 'Add' %> Job</h2>
-<h1><%= job ? job.company : 'Add Job' %></h1>
-<p><%= job ? job.position : '' %></p>
-<form action="<%= job ? '/job/update/' + job.id : '/job' %>" method="POST">
-    <label for="company">Company:</label><br>
-    <input type="text" id="company" name="company" value="<%= job ? job.company : '' %>" required><br>
-    <label for="position">Position:</label><br>
-    <input type="text" id="position" name="position" value="<%= job ? job.position : '' %>" required><br>
-    <label for="status">Status:</label><br>
-    <select id="status" name="status">
-        <option value="interview" <%= job && job.status === 'interview' ? 'selected' : '' %>>Interview</option>
-        <option value="declined" <%= job && job.status === 'declined' ? 'selected' : '' %>>Declined</option>
-        <option value="pending" <%= job && job.status === 'pending' ? 'selected' : '' %>>Pending</option>
-    </select><br>
-    <input type="submit" value="<%= job ? 'Update' : 'Add' %> Job">
-</form> -->

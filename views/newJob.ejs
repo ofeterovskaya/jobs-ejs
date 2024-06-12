@@ -1,0 +1,30 @@
+<%- include("partials/head.ejs") %>
+<%- include("partials/header.ejs") %>
+
+<h1>Add a New Job</h1>
+
+<form action="/jobs" method="POST">
+    <div>
+        <label for="company">Company:</label>
+        <input type="text" id="company" name="company" required maxlength="50">
+    </div>
+    <div>
+        <label for="position">Position:</label>
+        <input type="text" id="position" name="position" required maxlength="100">
+    </div>
+    <div>
+        <label for="status">Status:</label>
+        <select id="status" name="status">
+            <option value="interview">Interview</option>
+            <option value="declined">Declined</option>
+            <option value="pending" selected>Pending</option>
+        </select>
+    </div>
+    <div>
+        <label for="createdBy">Created By:</label>
+        <input type="text" id="createdBy" name="createdBy" required>
+    </div>
+    <button type="submit">Add Job</button>
+</form>
+
+<%- include("partials/footer.ejs") %>

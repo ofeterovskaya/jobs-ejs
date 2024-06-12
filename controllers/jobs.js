@@ -23,6 +23,7 @@ const addJobs = async (req, res, next) => {
 
 // GET the form for adding a new jobs
 const getNewJobs = async (req, res) => {
+    console.log('getNewJobs called');
     try {
         res.render('job', { job: null });
     } catch (error) {

@@ -8,13 +8,13 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const passport = require("passport");
 const passportInit = require("./passport/passportInit");
-const connectDB = require("./db/connect");
 const csrf = require('csurf');
 const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
 const auth = require('./middleware/auth');
 const jobs = require('./routes/jobs');
 const Job = require('./models/Job');
+const methodOverride = require('method-override');
 
 const helmet = require('helmet');
 const xssClean = require('xss-clean');
@@ -63,17 +63,24 @@ app.use(bodyParser.urlencoded({ extended: true })); // Use body-parser middlewar
 app.use(flash()); // Add the connect-flash middleware
 app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(express.urlencoded({ extended: false }));
+// app.use(csurf());
+app.use(methodOverride('_method'));
 
+// Security middlewares
 app.use(helmet());
 app.use(xssClean());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
 
 // Add the passport middleware
 passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use("/jobs", auth, jobs);
+
 
 app.use(csrf());
 // Middleware to add the CSRF token to the response locals
@@ -89,14 +96,13 @@ app.use((req, res, next) => {
     next();
   });
 
-const storeLocals = require("./middleware/storeLocals");
-app.use(storeLocals);
-
-//Routers
-app.get("/", (req, res) => {
-    res.render("index", { csrfToken: req.csrfToken() });
-});
-
+  const storeLocals = require("./middleware/storeLocals");
+  app.use(storeLocals);
+  
+app.get('/jobs/new', (req, res) => {
+      res.render('newJob', { job: null, _csrf: req.csrfToken() });
+  });
+  
 app.get('/jobs', async function(req, res) {
     try {
         // Fetch jobs from the database...
@@ -107,30 +113,35 @@ app.get('/jobs', async function(req, res) {
         res.status(500).send('An error occurred while fetching jobs');
     }
 });
+  
+  app.get('/job', (req, res) => {
+      res.render('job', { job: null }); // For adding a new job
+  });
+  
+  app.get('/job/edit/:id', async (req, res) => {
+      // Fetch the job with the given ID from your database
+      try {
+          const job = await Job.findById(req.params.id);
+          res.render('job', { job }); // For editing an existing job
+      } catch (error) {
+          console.error(error);
+          res.status(500).send('An error occurred while fetching the job');
+      }
+  });
+  
+  // Define '/jobs' route after all other '/jobs' routes
+  app.use("/jobs", auth, jobs);
+  
+  app.use("/sessions", require("./routes/sessionRoutes"));
+  
+  app.get("/", (req, res) => {
+      res.render("index", { csrfToken: req.csrfToken() });
+  });
 
-app.get('/job', (req, res) => {
-    res.render('job', { job: null }); // For adding a new job
-});
-app.use("/sessions", require("./routes/sessionRoutes"));
-
-app.get('/job/edit/:id', async (req, res) => {
-    // Fetch the job with the given ID from your database
-    try {
-        const job = await Job.findById(req.params.id);
-        res.render('job', { job }); // For editing an existing job
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while fetching the job');
-    }
-});
-
-const secretWordRouter = require("./routes/secretWord");// Replace the app.get and app.post statements for the "/secretWord" routes
+const secretWordRouter = require("./routes/secretWord");
 
 //const auth = require("./middleware/auth");
 app.use("/secretWord", auth, secretWordRouter);
-
-//Jobs routes handling
-app.use("/jobs", auth, require('./routes/jobs'));
 
 // Define a middleware for handling 404 errors
 app.use((req, res) => {  

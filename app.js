@@ -1,6 +1,7 @@
 require("dotenv").config(); // to load the .env file into the process.env object
 require("express-async-errors");// Import the express-async-errors module to handle async errors
-
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 // Initialize an express application
 const express = require('express');
 const session = require("express-session");
@@ -11,7 +12,13 @@ const connectDB = require("./db/connect");
 const csrf = require('csurf');
 const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
+const auth = require('./middleware/auth');
+const jobs = require('./routes/jobs');
+const Job = require('./models/Job');
 
+const helmet = require('helmet');
+const xssClean = require('xss-clean');
+const rateLimit = require('express-rate-limit');
 const app = express();
 
 const MongoDBStore = require('connect-mongodb-session')(session);
@@ -57,10 +64,16 @@ app.use(flash()); // Add the connect-flash middleware
 app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(express.urlencoded({ extended: false }));
 
+app.use(helmet());
+app.use(xssClean());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+
 // Add the passport middleware
 passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use("/jobs", auth, jobs);
 
 app.use(csrf());
 // Middleware to add the CSRF token to the response locals
@@ -83,12 +96,27 @@ app.use(storeLocals);
 app.get("/", (req, res) => {
     res.render("index", { csrfToken: req.csrfToken() });
 });
+
+app.get('/jobs', async function(req, res) {
+    try {
+        // Fetch jobs from the database...
+        let jobs = await Job.find(); 
+        res.render('jobs', { jobs: jobs, _csrf: req.csrfToken() });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('An error occurred while fetching jobs');
+    }
+});
+
 app.use("/sessions", require("./routes/sessionRoutes"));
 
 const secretWordRouter = require("./routes/secretWord");// Replace the app.get and app.post statements for the "/secretWord" routes
 
-const auth = require("./middleware/auth");
+//const auth = require("./middleware/auth");
 app.use("/secretWord", auth, secretWordRouter);
+
+//Jobs routes handling
+app.use("/jobs", auth, require('./routes/jobs'));
 
 // Define a middleware for handling 404 errors
 app.use((req, res) => {  

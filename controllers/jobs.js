@@ -1,48 +1,64 @@
+const mongoose = require('mongoose');
 const Jobs = require('../models/Job');
+//const validateId = require('../middleware/validateId');
 const handleErrors = require("../utils/parseValidationErrs");
+const csrfProtection = require("../middleware/csrfProtection");
+
+// GET a form for adding a new job
+const getNewJob = (req, res) => {
+    res.render('newJob', { job: null, csrfToken: req.csrfToken() });
+};
 
 // GET all Jobs for the current user
 const getJobs = async (req, res, next) => {
     try {
-        const jobs = await Jobs.find({ createdBy: req.user._id });
-        res.render('jobs', { jobs });
+        const jobs = await Jobs.find({ createdBy: req.user._id });       
+        res.render('jobs', { jobs: jobs, csrfToken: req.csrfToken() });
     } catch (error) {
         handleErrors(error, req, res);
+        console.error(error);
+        res.status(500).send('An error occurred while fetching jobs');
     }
 };
 
 // POST a new Jobs
 const addJobs = async (req, res, next) => {
     try {
-        const newJobs = await Jobs.create({ ...req.body, createdBy: req.user._id });
+        await Jobs.create({ ...req.body, createdBy: req.user._id });
         res.redirect('/jobs'); 
     } catch (error) {
         handleErrors(error, req, res);
     }
 };
 
-// GET the form for adding a new jobs
-const getNewJobs = async (req, res) => {
-    console.log('getNewJobs called');
-    try {
-        res.render('job', { job: null });
-    } catch (error) {
-        handleErrors(error, req, res);
+// Edit a job
+const editJobs = async (req, res) => {
+    const id = req.params.id;// Get job ID from URL parameters
+    const updatedJobData = req.body;// Get updated job data from request body
+    try {        
+        await Job.update(id, updatedJobData);// Update the job with new data
+        const job = await Job.findById(req.params.id); // Fetch the updated job details
+        //res.render(`/jobs/${id}`, { job: job, csrfToken: req.csrfToken() });// Redirect to the updated job's page
+        res.render('job', { job: job, csrfToken: req.csrfToken() });
+        res.redirect(`/jobs/${id}`);
+    } catch (error) {       
+        console.error(error);
+        res.status(500).send('An error occurred');
     }
 };
-
 // GET a specific jobs for editing
-const editJobs = async (req, res, next) => {
+const getEditJob = async (req, res) => {
     try {
-        const jobs = await Jobs.findOne({ _id: req.params.id, createdBy: req.user._id });
-        if (!jobs) {
-            res.status(404);
-            req.flash('error', 'Jobs not found');
-            return;
+        const job = await Jobs.findById(req.params.id);
+        if (job) {
+            res.render('job', { job: job, csrfToken: req.csrfToken() });
+        } else {
+            // This else block is implied by the catch block for errors, including "not found"
+            throw new Error('Job not found');
         }
-        res.render('job', { job: jobs });
     } catch (error) {
-        handleErrors(error, req, res); 
+        console.error(error);
+        res.status(500).send('An error occurred while fetching the job');
     }
 };
 
@@ -77,15 +93,15 @@ const deleteJobs = async (req, res, next) => {
         req.flash('success', 'Job was deleted');
         res.redirect('/jobs');
     } catch (error) {
-        handleErrors(error, req, res); 
+        handleErrors(error, req, res, '/jobs');
     }
 };
-
 module.exports = {
-  getJobs,
-  getNewJobs,
+  getNewJob,  
+  getJobs,  
   addJobs,
   editJobs,
+  getEditJob,
   updateJobs,
   deleteJobs
 };

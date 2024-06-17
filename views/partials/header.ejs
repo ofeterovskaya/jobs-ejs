@@ -1,9 +1,9 @@
 <!-- <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: auto;"> -->
 <h1 style="text-align: center;">The Jobs EJS Application</h1>
 <% if (user) { %>
-  <p style="color: green; text-align: center; margin-top: 5%;">User <%= user.name %> is logged on.</p>
+  <p style="color: rgb(34, 82, 34); text-align: center; ">User <%= user.name %> is logged on.</p>
    <form method="POST" action="/sessions/logoff" style="position: absolute; top: 0; right: 0;">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
    <button 
     type="submit"
     style="background-color: darkgreen; color: white;">

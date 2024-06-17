@@ -1,20 +1,24 @@
 require("dotenv").config(); // to load the .env file into the process.env object
 require("express-async-errors");// Import the express-async-errors module to handle async errors
 const mongoose = require('mongoose');
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
 // Initialize an express application
 const express = require('express');
+const dbConnect = require('./db/connect');
 const session = require("express-session");
 const flash = require("connect-flash");
 const passport = require("passport");
 const passportInit = require("./passport/passportInit");
-const csrf = require('csurf');
 const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
 const auth = require('./middleware/auth');
 const jobs = require('./routes/jobs');
 const Job = require('./models/Job');
+const sessionRoutes = require('./routes/sessionRoutes');
 const methodOverride = require('method-override');
+const secretWordRouter = require("./routes/secretWord");
+const csrfProtection = require("./middleware/csrfProtection");
+const storeLocals = require("./middleware/storeLocals");
 
 const helmet = require('helmet');
 const xssClean = require('xss-clean');
@@ -43,13 +47,6 @@ const sessionParms = {
     store: store,// The store instance where sessions will be stored    
     cookie: { sameSite: "strict", secure: inProduction  },// Options for the session ID cookie
 };
-  
-const csrf_options = {
-    protected_operations: ["PATCH"],
-    protected_content_types: ["application/json"],
-    development_mode:  !inProduction,
-    cookie: true,
-};
 
 // If the application is in production
 if (inProduction) {    
@@ -63,7 +60,6 @@ app.use(bodyParser.urlencoded({ extended: true })); // Use body-parser middlewar
 app.use(flash()); // Add the connect-flash middleware
 app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(express.urlencoded({ extended: false }));
-// app.use(csurf());
 app.use(methodOverride('_method'));
 
 // Security middlewares
@@ -82,12 +78,11 @@ app.use(passport.session());
 
 
 
-app.use(csrf());
-// Middleware to add the CSRF token to the response locals
-app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
-    next();
-});
+// // Middleware to add the CSRF token to the response locals
+// app.use((req, res, next) => {
+//     res.locals.csrfToken = req.csrfToken();
+//     next();
+// });
 
 // Middleware to add flash messages to the response locals
 app.use((req, res, next) => {
@@ -95,50 +90,19 @@ app.use((req, res, next) => {
     res.locals.errors = req.flash("error");
     next();
   });
-
-  const storeLocals = require("./middleware/storeLocals");
-  app.use(storeLocals);
+ 
+  app.use(storeLocals);  
+  app.use("/jobs", jobs);  
+  app.use('/sessions', sessionRoutes);
   
-app.get('/jobs/new', (req, res) => {
-      res.render('newJob', { job: null, _csrf: req.csrfToken() });
-  });
-  
-app.get('/jobs', async function(req, res) {
-    try {
-        // Fetch jobs from the database...
-        let jobs = await Job.find(); 
-        res.render('jobs', { jobs: jobs, _csrf: req.csrfToken() });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while fetching jobs');
-    }
-});
-  
-  app.get('/job', (req, res) => {
-      res.render('job', { job: null }); // For adding a new job
-  });
-  
-  app.get('/job/edit/:id', async (req, res) => {
-      // Fetch the job with the given ID from your database
-      try {
-          const job = await Job.findById(req.params.id);
-          res.render('job', { job }); // For editing an existing job
-      } catch (error) {
-          console.error(error);
-          res.status(500).send('An error occurred while fetching the job');
-      }
-  });
-  
-  // Define '/jobs' route after all other '/jobs' routes
-  app.use("/jobs", auth, jobs);
-  
-  app.use("/sessions", require("./routes/sessionRoutes"));
-  
-  app.get("/", (req, res) => {
+  app.get("/", csrfProtection, (req, res) => {
       res.render("index", { csrfToken: req.csrfToken() });
   });
 
-const secretWordRouter = require("./routes/secretWord");
+  app.get('/edit', csrfProtection, (req, res) => {
+    // Redirect to a job listing page, or handle as needed
+    res.render('edit', { csrfToken: req.csrfToken() });
+});
 
 //const auth = require("./middleware/auth");
 app.use("/secretWord", auth, secretWordRouter);
@@ -155,19 +119,31 @@ app.use((err, req, res, next) => {
     console.log(err);
 });
 
+// app.get('/multiply', (req, res) => {
+//     const first = Number(req.query.first);
+//     const second = Number(req.query.second);
+//     const result = first * second;
+  
+//     res.send(`The result is ${result}`);
+//   });
+
 const port = process.env.PORT || 3000;
 
-// Define an async function to start the server
 const start = async () => {
-try {
-  await require("./db/connect")(process.env.MONGO_URI);
-    // Start the server and log a message to the console
-    app.listen(port, () =>
-    console.log(`Server is listening on port ${port}...`)
-    );
-} catch (error) {   
-    console.log(error);
-}
-};
+    try {
+      const url = process.env.NODE_ENV === 'test' ? process.env.MONGO_URI_TEST : process.env.MONGO_URI;
+      await dbConnect(url);
+      console.log('Database connected successfully');
+      const server = app.listen(port, () =>
+        console.log(`Server is listening on port ${port}...`),
+      );
+      return server;
+    } catch (error) {
+      console.log('Failed to connect to the database', error);
+      process.exit(1);
+    }
+  };
+  
+  const server = start();
 
-start();
+module.exports = { app, server };

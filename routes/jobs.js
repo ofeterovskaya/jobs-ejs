@@ -1,51 +1,38 @@
 const express = require("express");
 const router = express.Router();
 const Job = require('../models/Job');
+const csrfProtection = require('../middleware/csrfProtection');
+const auth = require('../middleware/auth');
 
 const {
-    getJobs,
+    getNewJob,
+    getJobs,    
     addJobs,
-    getNewJobs,
-    editJobs,
+    editJobs, 
+    getEditJob,
     updateJobs,
-    deleteJobs,
+    deleteJobs,    
+      
 } = require("../controllers/jobs.js");
+const validateId = require("../middleware/validateId.js");
 
-router.get('/jobs', async function(req, res) {
-    try {
-        // Fetch jobs from the database...
-        let jobs = await Job.find(); 
-        res.render('jobs', { jobs: jobs, _csrf: req.csrfToken() });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred while fetching jobs');
-    }
-});
 
-router.route("/jobs/delete/:id")
-    .post(async function(req, res) {
-        try {
-            await Job.findByIdAndRemove(req.params.id);
-            res.redirect('/jobs');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('An error occurred while deleting the job');
-        }
-    });
+router.route("/new")
+    .get(auth, csrfProtection, getNewJob)
+    .post(auth, csrfProtection, addJobs);
 
-router.route("/jobs/new")
-    .get(getNewJobs)
-    .post(getNewJobs); 
+router.route("/")
+    .get(auth, csrfProtection, getJobs)
+    .post(auth, csrfProtection, addJobs);
 
-router.route("/jobs/edit/:id")
-    .get(editJobs)
-    .post(editJobs); 
+router.route("/edit/:id")
+    .get(auth, csrfProtection, validateId, getEditJob)
+    .post(auth, csrfProtection, validateId, editJobs); 
 
-router.route("/jobs/update/:id")
-    .post(updateJobs); 
+router.route("/update/:id")
+    .post(auth, csrfProtection, validateId, updateJobs); 
 
-router.route("/jobs")
-    .get(getJobs)
-    .post(addJobs);
+router.route("/delete/:id")
+    .post(auth, csrfProtection, validateId, deleteJobs);
 
 module.exports = router;

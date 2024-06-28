@@ -1,0 +1,97 @@
+//   describe("Functional Tests with Puppeteer", function () {
+//     let browser = null;
+//     let page = null;
+//     before(async function () {
+//       this.timeout(5000);
+//       browser = await puppeteer.launch();
+//       page = await browser.newPage();
+//       await page.goto("http://localhost:3000");
+//     });
+//     after(async function () {
+//       this.timeout(5000);
+//       await browser.close();
+//       return;
+//     });
+//     describe("got to site", function () {
+//       it("should have completed a connection", async () => {
+//       });
+//     });
+//     describe("people form", function () {
+//       this.timeout(5000);
+//       it("should have various elements", async () => {
+//         this.nameField = await page.waitForSelector("input[name=\"name\"]");
+//         this.ageField = await page.waitForSelector("input[name=\"age\"]");
+//         this.addPerson = await page.waitForSelector("button ::-p-text(Add)");
+
+//         it("should create a person record given name and age", async () => {
+//             await this.nameField.type("Fred");
+//             await this.ageField.type("10");
+//             await this.addPerson.click();
+//             await page.waitForNavigation();
+//             const resultDataDiv = await page.waitForSelector("#result");
+//             const resultData = await resultDataDiv.evaluate((element) => element.textContent);
+//             expect(resultData).to.include("A person record was added");
+//             ...
+//         });
+// npm install --save-dev mocha
+// npm install --save-dev chai
+// npm install --save-dev chai-http
+// npm install --save-dev factory-bot
+// npm install --save-dev @faker-js/faker
+// npm install --save-dev puppeteer
+
+// //Create a test directory in your repository. This is where you will put the actual test cases. Edit your .env file. Currently you have a line for MONGO_URI. Duplicate the line, and then change the copy to MONGO_URI_TEST. Add "-test" onto the end of the value. This gives you a separate test database. Edit your package.json. In the scripts stanza, the line for "test" should be changed to read:
+
+//   "test": "NODE_ENV=test mocha tests/*.js --timeout 5000 --exit",
+// //which will cause the tests to run. It also sets the NODE_ENV environment variable, which we'll use to load the test version of the database. Edit your app.js. You'll have a line that reads something like:
+
+//     const url = process.env.MONGO_URI;
+// //You should change it to look something like the following:
+
+// let mongoURL = process.env.MONGO_URI;
+// if (process.env.NODE_ENV == "test") {
+//   mongoURL = process.env.MONGO_URI_TEST;
+// }
+// //and then change url to mongoURL in the section that starts const store = . The point of this is so that your testing doesn't interfere with your production database, and also so that your production or development data doesn't interfere with your testing. Also, you want to have a function that will bring the database to a known state, so that previous tests don't cause subsequent ones to give false results. Create a file util/seed_db.js. It should read as follows:
+
+// const Job = require("../models/Job");
+// const User = require("../models/User");
+// const faker = require("@faker-js/faker").fakerEN_US;
+// const FactoryBot = require("factory-bot");
+// require("dotenv").config();
+
+// const testUserPassword = faker.internet.password();
+// const factory = FactoryBot.factory;
+// const factoryAdapter = new FactoryBot.MongooseAdapter();
+// factory.setAdapter(factoryAdapter);
+// factory.define("job", Job, {
+//   company: () => faker.company.name(),
+//   position: () => faker.person.jobTitle(),
+//   status: () =>
+//     ["interview", "declined", "pending"][Math.floor(3 * Math.random())], // random one of these
+// });
+// factory.define("user", User, {
+//   name: () => faker.person.fullName(),
+//   email: () => faker.internet.email(),
+//   password: () => faker.internet.password(),
+// });
+
+// const seed_db = async () => {
+//   let testUser = null;
+//   try {
+//     const mongoURL = process.env.MONGO_URI_TEST;
+//     await Job.deleteMany({}); // deletes all job records
+//     await User.deleteMany({}); // and all the users
+//     testUser = await factory.create("user", { password: testUserPassword });
+//     await factory.createMany("job", 20, { createdBy: testUser._id }); // put 30 job entries in the database.
+//   } catch (e) {
+//     console.log("database error");
+//     console.log(e.message);
+//     throw e;
+//   }
+//   return testUser;
+// };
+
+// module.exports = { testUserPassword, factory, seed_db };
+
+
